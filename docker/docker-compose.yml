@@ -1,0 +1,19 @@
+services:
+  app:
+    container_name: itkefu
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: caojinlong/itkefu:v1.0.0
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8000:8000"
+    volumes:
+      - db_data:/backend/data
+      - ./ssl:/etc/nginx/ssl
+    environment:
+      - DATABASE_URL=sqlite://./data/db.sqlite3
+
+volumes:
+  db_data:
