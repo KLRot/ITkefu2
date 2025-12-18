@@ -7,7 +7,10 @@ yarn-error.log*
 /test/unit/coverage/
 /test/e2e/reports/
 selenium-debug.log
-
+/frontend/node_modules
+/IT服务/
+/data/
+/venv/
 # Editor directories and files
 .idea
 .vscode

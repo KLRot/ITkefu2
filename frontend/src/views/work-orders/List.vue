@@ -24,6 +24,14 @@
             />
           </el-select>
         </el-form-item>
+
+        <el-form-item label="报障人">
+          <el-input v-model="searchForm.reporter_name" placeholder="请输入报障人" clearable style="width: 160px" />
+        </el-form-item>
+        
+        <el-form-item label="联系电话">
+          <el-input v-model="searchForm.contact_phone" placeholder="请输入联系电话" clearable style="width: 160px" />
+        </el-form-item>
         
         <el-form-item>
           <el-button type="primary" @click="loadWorkOrders">查询</el-button>
@@ -175,7 +183,9 @@ const currentOrder = ref(null)
 
 const searchForm = reactive({
   status: null,
-  assigned_to: null
+  assigned_to: null,
+  reporter_name: '',
+  contact_phone: ''
 })
 
 const problemTypes = ref([])
@@ -211,6 +221,16 @@ const loadWorkOrders = async () => {
     // 签收人筛选
     if (searchForm.assigned_to !== null) {
       params.assigned_to = searchForm.assigned_to
+    }
+
+    // 报障人筛选
+    if (searchForm.reporter_name) {
+      params.reporter_name = searchForm.reporter_name
+    }
+
+    // 联系电话筛选
+    if (searchForm.contact_phone) {
+      params.contact_phone = searchForm.contact_phone
     }
 
     // 始终不显示已归档工单

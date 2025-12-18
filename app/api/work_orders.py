@@ -224,6 +224,8 @@ async def get_work_orders(
     assigned_to: Optional[int] = None,
     problem_type: Optional[str] = None,
     order_no: Optional[str] = None,
+    reporter_name: Optional[str] = None,
+    contact_phone: Optional[str] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     status_lt: Optional[int] = None,
@@ -249,6 +251,14 @@ async def get_work_orders(
     # 工单编号模糊查询
     if order_no:
         query = query.filter(order_no__icontains=order_no)
+
+    # 报障人模糊查询
+    if reporter_name:
+        query = query.filter(reporter_name__icontains=reporter_name)
+
+    # 联系电话模糊查询
+    if contact_phone:
+        query = query.filter(contact_phone__icontains=contact_phone)
     
     # 创建时间范围查询
     try:
