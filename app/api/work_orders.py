@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union, Any
 from fastapi import APIRouter, Depends, HTTPException, Header
 from app.api.deps import get_current_active_user
 from app.models.models import Users, WorkOrders, SystemSettings, ProblemType, SolutionType
@@ -12,6 +12,8 @@ from app.services.work_order import WorkOrderService
 from datetime import datetime, timedelta
 from tortoise.expressions import Q
 from tortoise.transactions import in_transaction
+from jose import jwt, JWTError
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -48,6 +50,58 @@ async def verify_token(authorization: Optional[str] = Header(None)):
         )
     
     return authorization
+
+async def get_current_user_or_token(
+    authorization: Optional[str] = Header(None)
+):
+    """验证用户身份（支持API Token或JWT）"""
+    if not authorization:
+        raise HTTPException(
+            status_code=401,
+            detail="缺少认证信息",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    try:
+        scheme, token = authorization.split()
+        if scheme.lower() != 'bearer':
+            raise HTTPException(
+                status_code=401,
+                detail="认证方案无效，请使用Bearer认证",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            
+        # 1. 检查是否为 API Token
+        if token == API_TOKEN:
+            return "API_TOKEN"
+            
+        # 2. 尝试验证 JWT
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            username: str = payload.get("sub")
+            if username is None:
+                raise HTTPException(status_code=401, detail="无效的认证凭据")
+        except JWTError:
+            raise HTTPException(
+                status_code=401,
+                detail="无效的认证凭据",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            
+        user = await Users.get_or_none(username=username)
+        if user is None:
+            raise HTTPException(status_code=401, detail="用户不存在")
+        if not user.is_active:
+            raise HTTPException(status_code=400, detail="用户已被禁用")
+            
+        return user
+        
+    except ValueError:
+        raise HTTPException(
+            status_code=401,
+            detail="认证格式无效",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 async def generate_order_no():
     today = datetime.now()
@@ -365,7 +419,7 @@ async def archive_old_orders():
 @router.get("/{work_order_id}", response_model=WorkOrderInDB)
 async def get_work_order(
     work_order_id: int,
-    current_user: Users = Depends(get_current_active_user)
+    auth_user: Union[Users, str] = Depends(get_current_user_or_token)
 ):
     """获取工单详情"""
     try:
