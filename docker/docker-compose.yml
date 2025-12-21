@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: caojinlong/itkefu:v1.0.3
+    image: caojinlong/itkefu:v1.0.4
     ports:
       - "80:80"
       - "443:443"
