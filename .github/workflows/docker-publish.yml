@@ -3,7 +3,6 @@ name: Docker Build and Publish
 on:
   push:
     branches: [ "main" ]
-    tags: [ "v*.*.*" ]
   pull_request:
     branches: [ "main" ]
 
@@ -21,6 +20,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # 从提交信息中提取版本号 (例如: "feat: update to v1.0.4")
+      - name: Extract version from commit message
+        id: extract_version
+        run: |
+          # 尝试匹配 vX.Y.Z 格式
+          VERSION=$(echo "${{ github.event.head_commit.message }}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+          if [ -n "$VERSION" ]; then
+            echo "Found version: $VERSION"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "No version found in commit message"
+            echo "version=" >> $GITHUB_OUTPUT
+          fi
 
       # 设置 QEMU 以支持多架构构建 (可选，但推荐)
       - name: Set up QEMU
@@ -56,9 +69,8 @@ jobs:
             ${{ env.IMAGE_NAME }}
             ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ steps.extract_version.outputs.version }},enable=${{ steps.extract_version.outputs.version != '' }}
 
       # 构建并推送镜像
       - name: Build and push Docker image
