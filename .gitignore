@@ -18,3 +18,9 @@ selenium-debug.log
 *.ntvs*
 *.njsproj
 *.sln
+convert_md2docx.py
+数智IT客服项目说明及操作指导.md
+数智IT客服项目说明及操作指导.docx
+附件3.3：数智IT客服项目说明及操作指导.docx
+.gitignore
+.env    
